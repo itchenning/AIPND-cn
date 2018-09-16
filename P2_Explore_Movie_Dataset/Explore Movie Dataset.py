@@ -66,14 +66,17 @@ movie_data  = pd.read_csv("./tmdb-movies.csv")
 # In[2]:
 
 
-print(movie_data.shape)
-movie_data.head()
-movie_data.tail()
-movie_data.sample()
-movie_data.dtypes
-movie_data.isnull()
-movie_data.isnull().any()
-movie_data.describe();
+print("数据表的行和列:\n{}".format(movie_data.shape))
+print("数据表的前五行数据：")
+display(movie_data.head())
+print("数据表的最后五行数据：")
+display(movie_data.tail())
+print("数据表中随机抽取一行：")
+display(movie_data.sample())
+print("数据表数据检查：")
+display(movie_data.isnull().any())
+print("数据表描述:")
+movie_data.describe()
 
 
 # ---
@@ -146,11 +149,11 @@ movie_data.iloc[:][["popularity"]][(movie_data["popularity"] > 5) & (movie_data[
 # 
 # 要求：使用 `Groupby` 命令实现。
 
-# In[6]:
+# In[24]:
 
 
 movie_data.groupby(['release_year'])['revenue'].mean()
-movie_data.groupby(['director'])['popularity'].mean();
+movie_data.groupby(['director'])['popularity'].mean().sort_values(ascending=False)
 
 
 # ---
@@ -172,7 +175,7 @@ movie_data.groupby(['director'])['popularity'].mean();
 
 # **任务3.1：**对 `popularity` 最高的20名电影绘制其 `popularity` 值。
 
-# In[23]:
+# In[137]:
 
 
 index = movie_data.groupby(['popularity'])['original_title'].head().values[0:20]
@@ -180,26 +183,33 @@ values = movie_data.groupby(['popularity'])['popularity'].head().values[0:20]
 items = { "title":pd.Series(data = index), 
          'movie': pd.Series(data = values)}
 result = pd.DataFrame(items)
-plt.scatter(data = result, y= 'title', x = 'movie');
+plt.scatter(data = result, y= 'title', x = 'movie', color = "blue");
 
 
 # ---
 # **任务3.2：**分析电影净利润（票房-成本）随着年份变化的情况，并简单进行分析。
 
-# In[63]:
+# In[146]:
 
 
 revenue_top = movie_data.groupby(['revenue_adj'])['release_year', "original_title", "budget_adj", "revenue_adj"].head()
 revenue_top['profit'] = revenue_top['revenue_adj'] - revenue_top["budget_adj"]
-revenue_top
 
-year_top = revenue_top.groupby(["release_year"]).sum()
-year_top
+count_top = revenue_top.groupby(["release_year"]).count()['original_title'].values
+year_top = revenue_top.groupby(["release_year"]).count().index
+profit_top = revenue_top.groupby(["release_year"])["profit"].sum().values
 
-year_top["year"] = year_top.index
-year_top
+items = { "year":pd.Series(data = year_top), 
+         'profit': pd.Series(data = profit_top/count_top)}
+result = pd.DataFrame(items)
+display(result.head())
 
-sb.pairplot(year_top);
+result = result.head(10)
+
+result.set_index('year')['profit'].plot(kind='barh', color = "blue", x= "year")
+plt.xlabel("profit")
+plt.ylabel("year")
+plt.title("Profit each year")
 
 
 # ---
